@@ -1,0 +1,96 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mcp-server-code
+  namespace: kagent
+data:
+  server.py: |
+    from fastmcp import FastMCP
+    from datetime import datetime, timezone
+    import random, platform
+
+    mcp = FastMCP("cert-mcp-server")
+
+    @mcp.tool()
+    def get_current_time() -> str:
+        """Returns the current UTC time."""
+        return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+
+    @mcp.tool()
+    def roll_dice(sides: int = 6) -> int:
+        """Roll a dice with the specified number of sides (default 6)."""
+        return random.randint(1, sides)
+
+    @mcp.tool()
+    def calculate(expression: str) -> str:
+        """Evaluate a simple math expression, e.g. '2+2' or '10*5'."""
+        try:
+            allowed = set("0123456789+-*/()., ")
+            if not all(c in allowed for c in expression):
+                return "Error: only basic math allowed"
+            return str(eval(expression))
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool()
+    def cluster_info() -> str:
+        """Returns info about the runtime environment."""
+        return f"Python {platform.python_version()} on {platform.system()} {platform.machine()}"
+
+    if __name__ == "__main__":
+        mcp.run(transport="streamable-http", host="0.0.0.0", port=8080)
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-server
+  namespace: kagent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mcp-server
+  template:
+    metadata:
+      labels:
+        app: mcp-server
+    spec:
+      initContainers:
+        - name: install-deps
+          image: python:3.11-slim
+          command: ["pip", "install", "--target=/deps", "fastmcp"]
+          volumeMounts:
+            - name: deps
+              mountPath: /deps
+      containers:
+        - name: server
+          image: python:3.11-slim
+          command: ["python", "/code/server.py"]
+          env:
+            - name: PYTHONPATH
+              value: /deps
+          ports:
+            - containerPort: 8080
+          volumeMounts:
+            - name: code
+              mountPath: /code
+            - name: deps
+              mountPath: /deps
+      volumes:
+        - name: code
+          configMap:
+            name: mcp-server-code
+        - name: deps
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcp-server
+  namespace: kagent
+spec:
+  selector:
+    app: mcp-server
+  ports:
+    - port: 8080
+      targetPort: 8080

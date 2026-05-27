@@ -1,0 +1,12 @@
+apiVersion: kagent.dev/v1alpha2
+kind: RemoteMCPServer
+metadata:
+  name: cert-mcp-server
+  namespace: kagent
+spec:
+  description: Cert lab MCP server — time, dice, calculator, cluster info
+  protocol: STREAMABLE_HTTP
+  url: http://mcp-server.kagent.svc.cluster.local:8080/mcp
+  timeout: 30s
+  sseReadTimeout: 5m0s
+  terminateOnClose: true
