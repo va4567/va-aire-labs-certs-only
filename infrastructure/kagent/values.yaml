@@ -1,0 +1,2 @@
+agentgateway:
+  url: http://agentgateway-proxy.agentgateway-system.svc.cluster.local:80

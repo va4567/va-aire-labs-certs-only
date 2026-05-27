@@ -1,0 +1,51 @@
+apiVersion: kagent.dev/v1alpha2
+kind: Agent
+metadata:
+  name: my-agent
+  namespace: kagent
+spec:
+  description: Cert lab agent with time, dice, calculator, and cluster info tools
+  type: Declarative
+  declarative:
+    modelConfig: default-llm
+    runtime: python
+    stream: true
+    systemMessage: |
+      You are a helpful assistant with access to several tools.
+      Use get_current_time to report the current UTC time.
+      Use roll_dice to roll a dice — the user can specify sides: 4, 6, 8, 10, 12, or 20.
+      Use calculate to evaluate math expressions like '2+2' or '10*5'.
+      Use cluster_info to report the runtime environment details.
+    tools:
+    - type: McpServer
+      mcpServer:
+        apiGroup: kagent.dev
+        kind: RemoteMCPServer
+        name: cert-mcp-server
+        namespace: kagent
+        toolNames:
+        - get_current_time
+    - type: McpServer
+      mcpServer:
+        apiGroup: kagent.dev
+        kind: RemoteMCPServer
+        name: cert-mcp-server
+        namespace: kagent
+        toolNames:
+        - roll_dice
+    - type: McpServer
+      mcpServer:
+        apiGroup: kagent.dev
+        kind: RemoteMCPServer
+        name: cert-mcp-server
+        namespace: kagent
+        toolNames:
+        - calculate
+    - type: McpServer
+      mcpServer:
+        apiGroup: kagent.dev
+        kind: RemoteMCPServer
+        name: cert-mcp-server
+        namespace: kagent
+        toolNames:
+        - cluster_info
