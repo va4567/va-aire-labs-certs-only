@@ -1,0 +1,90 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mcpg-code
+  namespace: kagent
+data:
+  gateway.py: |
+    from fastmcp import FastMCP, Client
+    import asyncio
+
+    mcp = FastMCP("mcpg-gateway")
+
+    UPSTREAM = "http://mcp-server.kagent.svc.cluster.local:8080/mcp"
+
+    @mcp.tool()
+    async def get_current_time() -> str:
+        """Aggregated from cert-mcp-server: Returns current UTC time."""
+        async with Client(UPSTREAM) as client:
+            result = await client.call_tool("get_current_time", {})
+            return result[0].text if result else ""
+
+    @mcp.tool()
+    async def roll_dice(sides: int = 6) -> str:
+        """Aggregated from cert-mcp-server: Roll a dice."""
+        async with Client(UPSTREAM) as client:
+            result = await client.call_tool("roll_dice", {"sides": sides})
+            return str(result[0].text) if result else ""
+
+    @mcp.tool()
+    def list_aggregated_servers() -> str:
+        """Lists MCP servers aggregated by this gateway."""
+        return f"Aggregated: cert-mcp-server at {UPSTREAM}"
+
+    if __name__ == "__main__":
+        mcp.run(transport="streamable-http", host="0.0.0.0", port=8080)
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcpg
+  namespace: kagent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mcpg
+  template:
+    metadata:
+      labels:
+        app: mcpg
+    spec:
+      initContainers:
+        - name: install-deps
+          image: python:3.11-slim
+          command: ["pip", "install", "--target=/deps", "fastmcp"]
+          volumeMounts:
+            - name: deps
+              mountPath: /deps
+      containers:
+        - name: mcpg
+          image: python:3.11-slim
+          command: ["python", "/code/gateway.py"]
+          env:
+            - name: PYTHONPATH
+              value: /deps
+          ports:
+            - containerPort: 8080
+          volumeMounts:
+            - name: code
+              mountPath: /code
+            - name: deps
+              mountPath: /deps
+      volumes:
+        - name: code
+          configMap:
+            name: mcpg-code
+        - name: deps
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcpg
+  namespace: kagent
+spec:
+  selector:
+    app: mcpg
+  ports:
+    - port: 8080
+      targetPort: 8080

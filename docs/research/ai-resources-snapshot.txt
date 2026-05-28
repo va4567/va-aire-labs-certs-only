@@ -1,0 +1,22 @@
+NAMESPACE   NAME                                              TYPE          RUNTIME   READY   ACCEPTED
+kagent      agent.kagent.dev/argo-rollouts-conversion-agent   Declarative   python    True    True
+kagent      agent.kagent.dev/cert-lab-k8s-agent               Declarative   python    True    True
+kagent      agent.kagent.dev/cilium-debug-agent               Declarative   python    True    True
+kagent      agent.kagent.dev/cilium-manager-agent             Declarative   python    True    True
+kagent      agent.kagent.dev/cilium-policy-agent              Declarative   python    True    True
+kagent      agent.kagent.dev/helm-agent                       Declarative   python    True    True
+kagent      agent.kagent.dev/istio-agent                      Declarative   python    True    True
+kagent      agent.kagent.dev/k8s-agent                        Declarative   python    True    True
+kagent      agent.kagent.dev/kgateway-agent                   Declarative   python    True    True
+kagent      agent.kagent.dev/my-agent                         Declarative   python    True    True
+kagent      agent.kagent.dev/observability-agent              Declarative   python    True    True
+kagent      agent.kagent.dev/promql-agent                     Declarative   python    True    True
+
+NAMESPACE   NAME                                            PROTOCOL          URL                                                   ACCEPTED
+kagent      remotemcpserver.kagent.dev/cert-mcp-server      STREAMABLE_HTTP   http://mcp-server.kagent.svc.cluster.local:8080/mcp   True
+kagent      remotemcpserver.kagent.dev/kagent-grafana-mcp   STREAMABLE_HTTP   http://kagent-grafana-mcp.kagent:8000/mcp             True
+kagent      remotemcpserver.kagent.dev/kagent-tool-server   STREAMABLE_HTTP   http://kagent-tools.kagent:8084/mcp                   True
+
+NAMESPACE   NAME                                          PROVIDER   MODEL
+kagent      modelconfig.kagent.dev/default-llm            OpenAI     gpt-4o-mini
+kagent      modelconfig.kagent.dev/default-model-config   OpenAI     gpt-4.1-mini
